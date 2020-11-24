@@ -1,0 +1,17 @@
+{% extends "layout.html"%}
+{% block title %} 
+User Page
+{% endblock %}
+
+{%block body%}
+<br><br><br>
+<h2>&nbsp;&nbsp;Your Notes</h2>
+{%for note in html_content%} 
+&nbsp;&nbsp;&nbsp;&nbsp;Title: {{note[2]}} <br>
+&nbsp;&nbsp;&nbsp;&nbsp;Timestamp: {{note[4]}} <br>
+&nbsp;&nbsp;&nbsp;&nbsp;Message: {{note[3]}} <br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{url_for('editnote')}}">Edit Note</a>
+<hr>
+{%endfor%} 
+
+{%endblock %}
