@@ -1,16 +1,17 @@
-from flask import Flask, render_template
-from wtform_fields import *
-from models import *
+from flask import Flask, render_template, request, session, logging, url_for, redirect, flash
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from pprint import pprint
+from passlib.hash import sha256_crypt
 
+#herokuAppURI = "postgres://yignpyyvaonkjd:fa5709c2b802c74b5d0973b2dfc345e2debd6c1ce08598beff2dfe0d21456911@ec2-18-209-187-54.compute-1.amazonaws.com:5432/d4lsqn1i5nvulf"
 
-#configure app
+engine = create_engine("mysql+pymysql://root@localhost/signup", pool_pre_ping=True)
+
+db = scoped_session(sessionmaker(bind=engine))
 app = Flask(__name__)
-app.secret_key = 'replace later'
 
-#configure database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://yignpyyvaonkjd:fa5709c2b802c74b5d0973b2dfc345e2debd6c1ce08598beff2dfe0d21456911@ec2-18-209-187-54.compute-1.amazonaws.com:5432/d4lsqn1i5nvulf'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.secret_key="1234567notetaking"
 
 @app.route("/")
 def index():
@@ -28,27 +29,106 @@ def team():
 def application():
     return render_template("application.html")
 
-@app.route("/signup", methods=['GET','POST'])
+@app.route("/signup", methods=["GET","POST"])
 def signup():
-    reg_form = RegistrationForm()
-    if reg_form.validate_on_submit():
-        username = reg_form.username.data
-        password = reg_form.password.data
+    if request.method == "POST":
+        name = request.form.get("name")
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirm = request.form.get("confirm")
+        secure_password = sha256_crypt.encrypt(str(password))
+        
+        if password == confirm:
+            db.execute("INSERT INTO users(name, username, password) VALUES(:name, :username,:password)",
+            {"name":name, "username":username,"password":password}) 
+           
+            db.commit()
+            flash("you are registered and can login","success")
+            return redirect(url_for('login'))
+        else:
+            flash("Password does not match","danger")
+            return render_template("signup.html")
 
-        # check username exists/duplication
-        user_object = User.query.filter_by(username=username).first()
-        if user_object:
-            return "This username is already taken!"
-        # Add new user to the database
-        user = User(username=username, password=password)
-        db.session.add(user)
-        db.session.commit()
-        return "New username has been successfully created!"
-    return render_template("signup.html", form = reg_form)
+    return render_template("signup.html")
 
-@app.route("/login")
+@app.route("/login", methods = ['GET','POST'])
 def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        usernamedata = db.execute("SELECT username FROM users WHERE username=:username",{"username":username}).fetchone()
+        passworddata = db.execute("SELECT password FROM users WHERE username=:username",{"username":username}).fetchone()
+
+
+        if usernamedata is None:
+            flash("No username","danger")
+            return render_template("login.html")
+        else:
+            for password_data in passworddata:
+                # if sha256_crypt.verify(password, password_data):
+                if password in password_data:
+                    session['userLoggedIn'] = username
+                    session["log"] = True
+                    flash("You are now logged in", "success")
+                    return redirect(url_for('userpage'))
+                else: 
+                    flash("incorrect password","danger")
+                    return render_template("login.html")
+
     return render_template("login.html")
+
+@app.route("/userpage")
+def userpage():
+    username = session['userLoggedIn']
+    resultproxy = db.execute("SELECT * FROM notes WHERE username=:username",{"username":username})
+
+    html_content = []
+
+    print("ALL NOTES")
+    for row in resultproxy:
+        html_content.append(row)
+            
+    return render_template("userpage.html", html_content = html_content)
+
+@app.route("/newnote", methods = ['GET','POST'])
+def newnote():
+    if request.method == "POST":
+        title = request.form.get("title")
+        timestamp = request.form.get("date")
+        note = request.form.get("note")
+        username = session['userLoggedIn']
+
+        db.execute("INSERT INTO notes(title,timestamp, note, username) VALUES(:title, :timestamp, :note, :username)",
+        {"title":title, "timestamp":timestamp, "note":note, "username": username})
+        db.commit()
+
+        flash("Your note is created","success")
+
+    return render_template("newnote.html")
+
+@app.route("/<note_id>/editnote")
+def editnote(note_id):
+    if request.method == "POST":
+        title = request.form.get("title")
+        timestamp = request.form.get("date")
+        note = request.form.get("note")
+        username = session['userLoggedIn']
+    
+    else:
+        title = request.form.get("title")
+        timestamp = request.form.get("date")
+        note = request.form.get("note")
+        username = session['userLoggedIn']
+
+    #load the data for auto-filled, basing on id
+    return render_template("editnote.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You are now logged out", "success")
+    return  redirect(url_for('login'))
   
 @app.route("/terms")
 def terms():
