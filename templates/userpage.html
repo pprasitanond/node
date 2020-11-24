@@ -10,7 +10,7 @@ User Page
 &nbsp;&nbsp;&nbsp;&nbsp;Title: {{note[2]}} <br>
 &nbsp;&nbsp;&nbsp;&nbsp;Timestamp: {{note[4]}} <br>
 &nbsp;&nbsp;&nbsp;&nbsp;Message: {{note[3]}} <br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{url_for('editnote')}}">Edit Note</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{url_for('editnote', note_id=note[0])}}">Edit Note</a>
 <hr>
 {%endfor%} 
 

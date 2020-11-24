@@ -3,12 +3,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from pprint import pprint
 from passlib.hash import sha256_crypt
+from flask_sqlalchemy import SQLAlchemy
 
-#herokuAppURI = "postgres://yignpyyvaonkjd:fa5709c2b802c74b5d0973b2dfc345e2debd6c1ce08598beff2dfe0d21456911@ec2-18-209-187-54.compute-1.amazonaws.com:5432/d4lsqn1i5nvulf"
-
-engine = create_engine("mysql+pymysql://root@localhost/signup", pool_pre_ping=True)
+# mysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22?reconnect=true
+#creating connection
+# engine = create_engine("mysql+pymysql://root@localhost/signup", pool_pre_ping=True)
+engine = create_engine("mysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22?reconnect=true", pool_pre_ping=True)
 
 db = scoped_session(sessionmaker(bind=engine))
+
 app = Flask(__name__)
 
 app.secret_key="1234567notetaking"
@@ -107,7 +110,7 @@ def newnote():
 
     return render_template("newnote.html")
 
-@app.route("/<note_id>/editnote")
+@app.route("/<note_id>/editnote", methods = ['GET','POST'])
 def editnote(note_id):
     if request.method == "POST":
         title = request.form.get("title")
