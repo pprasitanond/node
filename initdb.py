@@ -1,3 +1,3 @@
-from app.py import dv
+from app.py import db
 
 db.create_all()
