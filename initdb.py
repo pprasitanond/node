@@ -1,3 +1,3 @@
-from app.py import db
+from node.app import db
 
 db.create_all()
