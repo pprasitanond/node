@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 # mysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22?reconnect=true
 #creating connection
 # engine = create_engine("mysql+pymysql://root@localhost/signup", pool_pre_ping=True)
-engine = create_engine("mysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22?reconnect=true", pool_pre_ping=True)
+engine = create_engine("mysql+pymysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22", pool_pre_ping=True)
 
 db = scoped_session(sessionmaker(bind=engine))
 
