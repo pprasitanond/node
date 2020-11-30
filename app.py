@@ -5,9 +5,12 @@ from pprint import pprint
 from passlib.hash import sha256_crypt
 from flask_sqlalchemy import SQLAlchemy
 
-# mysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22?reconnect=true
 #creating connection
+
+#local connection
 # engine = create_engine("mysql+pymysql://root@localhost/signup", pool_pre_ping=True)
+
+#heroku connection
 engine = create_engine("mysql+pymysql://b77e84f6bd937c:cc695d3a@us-cdbr-east-02.cleardb.com/heroku_ce45a510ac0de22", pool_pre_ping=True)
 
 db = scoped_session(sessionmaker(bind=engine))
@@ -112,21 +115,23 @@ def newnote():
 
 @app.route("/<note_id>/editnote", methods = ['GET','POST'])
 def editnote(note_id):
+
     if request.method == "POST":
         title = request.form.get("title")
         timestamp = request.form.get("date")
         note = request.form.get("note")
         username = session['userLoggedIn']
+
+        print(note_id)
+
+        db.execute("UPDATE notes SET title = :title, timestamp = :timestamp, note= :note, id= :1",
+        {"title":title, "timestamp":timestamp, "note":note, "id":1})
     
-    else:
-        title = request.form.get("title")
-        timestamp = request.form.get("date")
-        note = request.form.get("note")
-        username = session['userLoggedIn']
+        db.commit()
 
-    #load the data for auto-filled, basing on id
-    return render_template("editnote.html")
+        flash("Your note is updated","success")
 
+    return render_template("newnote.html")
 @app.route("/logout")
 def logout():
     session.clear()
